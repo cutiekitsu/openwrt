@@ -44,6 +44,7 @@ define Device/jio_airfiber
   KERNEL_NAME := Image
   IMAGES := squashfs-initramfs-uImage.itb
   IMAGE/squashfs-initramfs-uImage.itb := append-kernel | pad-to 64k | append-rootfs
+  DEVICE_PACKAGES := kmod-ath12k kmod-ath12k-pci kmod-ath12k-ahb
 endef
 TARGET_DEVICES += jio_airfiber
 

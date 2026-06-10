@@ -11,6 +11,10 @@ case "$board" in
 8devices,kiwi-dvk)
 	ubootenv_add_mmc "0:APPSBLENV" "" "0x0" "0x40000" "0x40000"
 	;;
+jiorouter,ax6000-jidu6j11)
+	#         syntax: partition,  offset,  size,   erasesize
+	ubootenv_add_mtd "0:appsblenv" "0x0" "0x40000" "0x20000"
+	;;
 esac
 
 config_load ubootenv

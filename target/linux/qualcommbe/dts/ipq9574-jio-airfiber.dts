@@ -2,8 +2,7 @@
 /*
  * Jio AirFiber (JIDU6611) - IPQ9574 AP-AL02-C1
  *
- * Merged from ipq9574-jiorouter-common.dtsi and ipq9574-jio-airfiber.dts
- */
+  */
 
 /dts-v1/;
 
@@ -17,8 +16,8 @@
 #include <dt-bindings/reset/qcom,qca8k-nsscc.h>
 
 / {
-	model = "Jio AirFiber JIDU6611 / Qualcomm IPQ9574";
-	compatible = "qcom,ipq9574-ap-al02-c1", "qcom,ipq9574-al02", "qcom,ipq9574";
+	model = "JioRouter AX6000 JIDU6J11";
+	compatible = "jiorouter,ax6000-jidu6j11", "qcom,ipq9574";
 
 	aliases {
 		serial0 = &blsp1_uart2;
@@ -74,39 +73,28 @@
 			function = LED_FUNCTION_STATUS;
 			gpios = <&tlmm 6 GPIO_ACTIVE_HIGH>;
 			default-state = "on";
+			linux,default-trigger = "none";
 		};
 
 		led_green: led-1 {
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_STATUS;
 			gpios = <&tlmm 16 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "none";
 		};
 
 		led_blue: led-2 {
 			color = <LED_COLOR_ID_BLUE>;
 			function = LED_FUNCTION_STATUS;
 			gpios = <&tlmm 17 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "none";
 		};
 	};
 };
 
-
-/* CPU */
-// &cpu0 { cpu-supply = <&apc_vreg>; };
-// &cpu1 { cpu-supply = <&apc_vreg>; };
-// &cpu2 { cpu-supply = <&apc_vreg>; };
-// &cpu3 { cpu-supply = <&apc_vreg>; };
-// &apc_apm { status = "okay"; };
-// &apc_cpr { vdd-supply = <&ipq9574_s1>; status = "okay"; };
-
-/* ---- PCIe Interfaces ---- */
-
 &pcie0 { status = "disabled"; };
-&pcie0_phy { status = "disabled"; }; 
-&pcie1_phy {
-	status = "okay";
-};
-
+&pcie0_phy { status = "disabled"; };
+&pcie1_phy { status = "okay"; };
 &pcie1 {
 	pinctrl-0 = <&pcie_qcn9000_pins>;
 	pinctrl-names = "default";
@@ -125,26 +113,9 @@
 };
 
 &pcie2_phy { status = "disabled"; };
-
-&pcie2 {
-	pinctrl-0 = <&pcie2_default>;
-	pinctrl-names = "default";
-	perst-gpios = <&tlmm 29 GPIO_ACTIVE_LOW>;
-	wake-gpios = <&tlmm 30 GPIO_ACTIVE_LOW>;
-	status = "disabled";
-};
-
+&pcie2 { status = "disabled"; };
 &pcie3_phy { status = "disabled"; };
-
-&pcie3 {
-	pinctrl-0 = <&pcie3_default>;
-	pinctrl-names = "default";
-	perst-gpios = <&tlmm 32 GPIO_ACTIVE_LOW>;
-	wake-gpios = <&tlmm 33 GPIO_ACTIVE_LOW>;
-	qcom,perst-delay-us = <20000>;
-	qcom,boot-delay-ms = <100>;
-	status = "disabled";
-};
+&pcie3 { status = "disabled"; };
 
 /* ---- MDIO and Ethernet PHYs ---- */
 &mdio {
@@ -164,11 +135,11 @@
 		phy1: ethernet-phy@11 { reg = <0x11>; };
 		phy2: ethernet-phy@12 { reg = <0x12>; };
 		phy3: ethernet-phy@13 { reg = <0x13>; };
-		phy5: ethernet-phy@0  { reg = <0x14>; };
+		phy5: ethernet-phy@14 { reg = <0x14>; };
 	};
 };
 
-/* ---- Pinmux ---- */
+/* ---- Pinmux (add USB supply pin) ---- */
 &tlmm {
 	spi_0_pins: spi-0-state {
 		pins = "gpio11", "gpio12", "gpio13", "gpio14";
@@ -293,6 +264,30 @@
 			bias-pull-up;
 		};
 	};
+
+	/* USB supply pin – enables VBUS or PHY power */
+	usb_supply_pin: usb-supply-pin {
+		pins = "gpio64";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
+		output-high;
+	};
+
+	mdio_pins: mdio-pins {
+		mux_0 {
+			pins = "gpio38";
+			function = "mdc";
+			drive-strength = <8>;
+			bias-disable;
+		};
+		mux_1 {
+			pins = "gpio39";
+			function = "mdio";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+	};
 };
 
 /* ---- Ethernet MAC (PPE) configuration ---- */
@@ -306,12 +301,10 @@
 			phy-mode = "qsgmii";
 			managed = "in-band-status";
 			label = "wan";
-			nvmem-cells = <&macaddr_art_0>;
-			nvmem-cell-names = "mac-address";
 			phy-handle = <&phy0>;
 			pcs-handle = <&pcs0_ch0>;
 			clocks = <&nsscc NSS_CC_PORT1_MAC_CLK>,
-				 <&nsscc NSS_CC_PORT1_RX_CLK>,
+				<&nsscc NSS_CC_PORT1_RX_CLK>,
 				 <&nsscc NSS_CC_PORT1_TX_CLK>;
 			clock-names = "mac", "rx", "tx";
 			resets = <&nsscc PORT1_MAC_ARES>,
@@ -325,11 +318,6 @@
 			phy-mode = "qsgmii";
 			managed = "in-band-status";
 			label = "lan1";
-
-			nvmem-cells = <&macaddr_art_0>;
-			nvmem-cell-names = "mac-address";
-			mac-address-increment= <1>;
-
 			phy-handle = <&phy1>;
 			pcs-handle = <&pcs0_ch1>;
 			clocks = <&nsscc NSS_CC_PORT2_MAC_CLK>,
@@ -347,9 +335,6 @@
 			phy-mode = "qsgmii";
 			managed = "in-band-status";
 			label = "lan2";
-			nvmem-cells = <&macaddr_art_0>;
-			nvmem-cell-names = "mac-address";
-			mac-address-increment= <2>;
 			phy-handle = <&phy2>;
 			pcs-handle = <&pcs0_ch2>;
 			clocks = <&nsscc NSS_CC_PORT3_MAC_CLK>,
@@ -367,9 +352,6 @@
 			phy-mode = "qsgmii";
 			managed = "in-band-status";
 			label = "lan3";
-			nvmem-cells = <&macaddr_art_0>;
-			nvmem-cell-names = "mac-address";
-			mac-address-increment= <3>;
 			phy-handle = <&phy3>;
 			pcs-handle = <&pcs0_ch3>;
 			clocks = <&nsscc NSS_CC_PORT4_MAC_CLK>,
@@ -382,9 +364,7 @@
 			reset-names = "mac", "rx", "tx";
 		};
 
-		port@5 {
-			status = "disabled";
-		};
+		port@5 { status = "disabled"; };
 
 		port@6 {
 			reg = <6>;
@@ -392,9 +372,6 @@
 			phy-mode = "qsgmii";
 			managed = "in-band-status";
 			label = "lan4";
-			nvmem-cells = <&macaddr_art_0>;
-			nvmem-cell-names = "mac-address";
-			mac-address-increment= <4>;
 			phy-handle = <&phy5>;
 			pcs-handle = <&pcs2_ch0>;
 			clocks = <&nsscc NSS_CC_PORT6_MAC_CLK>,
@@ -410,19 +387,14 @@
 };
 
 /* Disable unused UNIPHY/PCS */
-&pcs1 {
-	status = "disabled";
-};
-
+&pcs1 { status = "disabled"; };
 &pcs2 {
 	status = "okay";
 	qcom,uniphy-mode = "qsgmii";
 };
 
 /* ---- Serial NAND Flash ---- */
-&qpic_bam {
-	status = "okay";
-};
+&qpic_bam { status = "okay"; };
 
 &qpic_nand {
 	pinctrl-0 = <&qpic_snand_default_state>;
@@ -540,15 +512,13 @@
 				reg = <0x01300000 0x00180000>;
 				read-only;
 			};
-			partition@01480000 {
+
+			art: partition@01480000 {
 				compatible = "nvmem-cells";
 				label = "0:art";
 				reg = <0x01480000 0x00100000>;
 				read-only;
 
-				macaddr_art_0: macaddr@0 {
-					reg = <0x0 0x6>;
-				};
 				precal_wifi0: precal@0 {   /* 2.4 GHz integrated */
 					reg = <0x0 0x20000>;
 				};
@@ -556,6 +526,7 @@
 					reg = <0x20000 0x20000>;
 				};
 			};
+
 			partition@01580000 {
 				label = "0:ethphyfw";
 				reg = <0x01580000 0x00100000>;
@@ -595,21 +566,14 @@
 	};
 };
 
-/* WiFi */
-/* Integrated IPQ9574 radio */
-// &wifi0 {
-//     qcom,board_id = <0x30>;   /* from kernel cmdline: bdf_integrated=0x30 */
-//     calibration = <&precal_wifi0>;
-//     status = "ok";
-// };
-
+/* ---- Integrated 2.4 GHz WiFi (disabled – needs remoteproc) ---- */
 &soc {
 	wifi@c0000000 {
 		compatible = "qcom,cnss-qca9574", "qcom,ipq9574-wifi";
 		reg = <0xc0000000 0x1000000>;
-		qcom,board_id = <0x30>;          /* bdf_integrated=0x30 */
+		qcom,board_id = <0x30>;
 		qcom,tgt-mem-mode = <0x02>;
-		calibration = <&precal_wifi0>;   /* ART offset 0x0, size 0x20000 */
+		calibration = <&precal_wifi0>;
 		status = "okay";
 		/* The driver expects a remote processor handle; this is usually
 		   provided by the "qcom,rproc" property in the stock DTS. If your
@@ -618,11 +582,38 @@
 	};
 };
 
-/* ---- Disable non-existent SPI NOR ---- */
-&blsp1_spi0 {
+/* ---- USB – full stock configuration ---- */
+&usb3 {
 	status = "disabled";
+	pinctrl-0 = <&usb_supply_pin>;
+	pinctrl-names = "default";
 };
 
+&usb_0_dwc3 {
+	dr_mode = "disabled";
+	snps,quirk-ref-clock-adjustment = <0xa87f0>;
+	snps,quirk-ref-clock-period = <0x29>;
+	snps,dis_ep_cache_eviction;
+	tx-fifo-resize;
+	snps,dis_u2_susphy_quirk;
+	snps,dis_u3_susphy_quirk;
+};
+
+&usb_0_qusbphy {
+	status = "disabled";
+	vdd-supply = <&regulator_fixed_0p925>;
+	vdda-pll-supply = <&mp5496_l5>;
+	vdda-phy-dpdm-supply = <&regulator_fixed_3p3>;
+};
+
+&usb_0_qmpphy {
+	status = "disabled";
+	vdda-pll-supply = <&mp5496_l5>;
+	vdda-phy-supply = <&regulator_fixed_0p925>;
+};
+
+/* ---- Serial & misc (unchanged) ---- */
+&blsp1_spi0 { status = "disabled"; };
 &blsp1_uart2 {
 	pinctrl-0 = <&uart2_pins>;
 	pinctrl-names = "default";
@@ -654,36 +645,9 @@
 	};
 };
 
-&sleep_clk {
-	clock-frequency = <32000>;
-};
+&sleep_clk { clock-frequency = <32000>; };
 
-/* USB: */
-&usb_0_dwc3 { dr_mode = "host"; };
-&usb_0_qmpphy {
-    vdda-pll-supply = <&mp5496_l5>;
-    vdda-phy-supply = <&regulator_fixed_0p925>;
-    status = "okay";
-};
-&usb_0_qusbphy {
-    vdd-supply = <&regulator_fixed_0p925>;
-    vdda-pll-supply = <&mp5496_l5>;
-    vdda-phy-dpdm-supply = <&regulator_fixed_3p3>;
-    status = "okay";
-};
-&usb3 { status = "okay"; };
-
-/* WiFi reference clock configuration */
-&ref_48mhz_clk {
-	clock-div = <1>;
-	clock-mult = <1>;
-};
-
-&xo_board_clk {
-	clock-div = <2>;
-	clock-mult = <1>;
-};
-
-&xo_clk {
-	clock-frequency = <48000000>;
-};
+/* ---- Clock configuration (unchanged) ---- */
+&ref_48mhz_clk { clock-div = <1>; clock-mult = <1>; };
+&xo_board_clk { clock-div = <2>; clock-mult = <1>; };
+&xo_clk { clock-frequency = <48000000>; };
