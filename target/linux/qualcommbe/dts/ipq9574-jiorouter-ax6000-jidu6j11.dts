@@ -51,6 +51,15 @@
 		regulator-name = "fixed_0p925";
 	};
 
+	vdd_usb_phy: vdd-usb-phy {
+		compatible = "regulator-fixed";
+		regulator-name = "vdd_usb_phy";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		vin-supply = <&regulator_fixed_3p3>;
+	};
+
+
 	gpio-keys {
 		compatible = "gpio-keys";
 		pinctrl-0 = <&gpio_keys_default>;
@@ -155,7 +164,7 @@
 	};
 
 	gpio_leds_default: gpio-leds-default-state {
-		pins = "gpio64";
+		pins = "gpio6", "gpio16", "gpio17";
 		function = "gpio";
 		drive-strength = <8>;
 		bias-pull-up;
@@ -591,10 +600,16 @@
 };
 
 &usb_0_qusbphy {
+	vdd-supply = <&vdd_usb_phy>;
+    vdda-pll-supply = <&vdd_usb_phy>;
+    vdda-phy-dpdm-supply = <&vdd_usb_phy>;
 	status = "okay";
 };
 
+
 &usb_0_qmpphy {
+	vdda-phy-supply = <&vdd_usb_phy>;
+    vdda-pll-supply = <&vdd_usb_phy>;
 	status = "okay";
 };
 
@@ -637,3 +652,7 @@
 &ref_48mhz_clk { clock-div = <1>; clock-mult = <1>; };
 &xo_board_clk { clock-div = <2>; clock-mult = <1>; };
 &xo_clk { clock-frequency = <48000000>; };
+
+&qfprom {
+    status = "okay";
+};

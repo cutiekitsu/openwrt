@@ -1,5 +1,5 @@
 #!/bin/sh
-# /etc/hotplug.d/firmware/11-ath11k-caldata
+# /etc/hotplug.d/firmware/10-ath11k-caldata
 
 . /lib/functions.sh
 # echo "hotplug.d:10-ath11k-caldata --> action: $ACTION, firmware: $FIRMWARE" > /dev/console
@@ -29,7 +29,7 @@ case "$ACTION" in
                 if [ -e "$art_mtd" ]; then
                     mkdir -p "$TARGET_DIR"
                     dd if="$art_mtd" of="/lib/firmware/$FIRMWARE" bs=1 skip=311296 count=131072 2> dev/null
-                    # echo "ath11k-caldata: extracted OK" > /dev/console
+                #     echo "ath11k-caldata: extracted OK" > /dev/console
                 # else
                 #     echo "ath11k-caldata: MTD $art_mtd NOT found" > /dev/console
                 fi
