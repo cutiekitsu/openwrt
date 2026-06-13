@@ -403,7 +403,6 @@
 };
 
 /* Disable unused UNIPHY/PCS */
-/* Disable unused UNIPHY/PCS */
 &pcs1 { status = "disabled"; };
 &pcs2 { status = "disabled"; };
 
