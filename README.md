@@ -4,7 +4,7 @@
 - ⬜ JIDU6111
 - ⬜ JIDU6411
 - ⚠️ JIDU6611
-- ⬜ JIDU6811
+- ⚠️ JIDU6811
 - ⬜ JIDU6911
 
 ## Feature Support Table:
@@ -20,9 +20,9 @@
 | initramfs boot              | ⬜        | ⬜        | ✅        | ✅        | ⬜        |
 | NAND Flash                  | ⬜        | ⬜        | ✅        | ✅        | ⬜        |
 | Partition Table             | ⬜        | ⬜        | ✅        | ✅        | ⬜        |
-| Calibration Data            | ⬜        | ⬜        | ✅        | ⬜        | ⬜        |
+| Calibration Data            | ⬜        | ⬜        | ✅        | ✅        | ⬜        |
 | MAC Addresses               | ⬜        | ⬜        | ✅        | ✅        | ⬜        |
-| BDF Files                   | ⬜        | ⬜        | ✅        | ⬜        | ⬜        |
+| BDF Files                   | ⬜        | ⬜        | ✅        | ✅        | ⬜        |
 | U-Boot Environment (`fw_*`) | ⬜        | ⬜        | ✅        | ✅        | ⬜        |
 | 2.4 GHz Radio               | ⬜        | ⬜        | ⬜        | ⬜        | ⬜        |
 | 5.0 GHz Radio               | ⬜        | ⬜        | ✅        | ✅        | ⬜        |
@@ -32,7 +32,7 @@
 **Legend:**
 - ✅ = Supported / Working
 - ⬜ = Not yet supported / Untested
-- ⚠️ = Partial support (use when needed later)
+- ⚠️ = Partial support
 - ❌ = Not present on hardware / Not supported
 - 🔍 = Investigation in progress
 
