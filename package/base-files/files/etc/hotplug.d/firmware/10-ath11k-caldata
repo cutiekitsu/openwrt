@@ -2,11 +2,9 @@
 # /etc/hotplug.d/firmware/10-ath11k-caldata
 
 . /lib/functions.sh
-# echo "hotplug.d:10-ath11k-caldata --> action: $ACTION, firmware: $FIRMWARE" > /dev/console
 case "$ACTION" in
     add|add_deferred)
         case "$FIRMWARE" in
-            # --- CASE 2: Handle Internal IPQ9574 SoC Radio Calibration ---
             *"ath11k/IPQ9574/hw1.0/caldata.bin")
                 art_mtd=$(find_mtd_part "0:art")
                 [ -z "$art_mtd" ] && art_mtd=$(find_mtd_part "art")
@@ -15,7 +13,6 @@ case "$ACTION" in
                 if [ -e "$art_mtd" ]; then
                     mkdir -p "/lib/firmware/ath11k/IPQ9574/hw1.0"
                     dd if="$art_mtd" of="/lib/firmware/$FIRMWARE" bs=1 skip=4096 count=131072 2> /dev/null
-                    # echo "ath11k-caldata: Extracted SoC radio caldata from ART" > /dev/console
                 fi
                 ;;
 
@@ -25,13 +22,9 @@ case "$ACTION" in
                 [ -z "$art_mtd" ] && art_mtd=$(find_mtd_part "art")
                 [ -z "$art_mtd" ] && art_mtd="/dev/mtdblock20"
 
-                echo "hotplug: FIRMWARE=$FIRMWARE, art_mtd=$art_mtd" > /dev/console
                 if [ -e "$art_mtd" ]; then
                     mkdir -p "$TARGET_DIR"
                     dd if="$art_mtd" of="/lib/firmware/$FIRMWARE" bs=1 skip=311296 count=131072 2> dev/null
-                #     echo "ath11k-caldata: extracted OK" > /dev/console
-                # else
-                #     echo "ath11k-caldata: MTD $art_mtd NOT found" > /dev/console
                 fi
                 ;;
             esac

@@ -16,11 +16,15 @@
 #include <dt-bindings/reset/qcom,qca8k-nsscc.h>
 
 / {
-	model = "JioRouter AX6000 JIDU6J11";
+	model = "JioRouter AX6000 JIDU6J11 / Qualcomm IPQ9574";
 	compatible = "jiorouter,ax6000-jidu6j11", "qcom,ipq9574";
 
 	aliases {
 		serial0 = &blsp1_uart2;
+		pci0 = &pcie0;
+		pci1 = &pcie1;
+		pci2 = &pcie2;
+		pci3 = &pcie3;
 	};
 
 	chosen {
@@ -51,45 +55,13 @@
 		regulator-name = "fixed_0p925";
 	};
 
+	/*TODO: Remove*/
 	vdd_usb_phy: vdd-usb-phy {
 		compatible = "regulator-fixed";
 		regulator-name = "vdd_usb_phy";
 		regulator-min-microvolt = <1800000>;
 		regulator-max-microvolt = <1800000>;
 		vin-supply = <&regulator_fixed_3p3>;
-	};
-
-	reserved-memory {
-        #address-cells = <2>;
-        #size-cells = <2>;
-        ranges;
-
-        wlan_fw_mem: wlan-fw@4b000000 {
-            compatible = "shared-dma-pool";
-            reg = <0x0 0x4b000000 0x0 0x2000000>;
-            no-map;
-        };
-    };
-
-	smp2p-wcss {
-		compatible = "qcom,smp2p";
-		qcom,smem = <435>, <428>;
-		interrupt-parent = <&intc>;
-		interrupts = <GIC_SPI 322 IRQ_TYPE_EDGE_RISING>;
-		mboxes = <&apcs_glb 9>;
-		qcom,local-pid = <0>;
-		qcom,remote-pid = <1>;
-
-		wcss_smp2p_out: master-kernel {
-			qcom,entry-name = "master-kernel";
-			#qcom,smem-state-cells = <1>;
-		};
-
-		wcss_smp2p_in: slave-kernel {
-			qcom,entry-name = "slave-kernel";
-			interrupt-controller;
-			#interrupt-cells = <2>;
-		};
 	};
 
 	gpio-keys {
@@ -342,6 +314,9 @@
 			phy-mode = "qsgmii";
 			managed = "in-band-status";
 			label = "wan";
+			nvmem-cells = <&macaddr_wan>;
+            nvmem-cell-names = "mac-address";
+
 			phy-handle = <&phy0>;
 			pcs-handle = <&pcs0_ch0>;
 			clocks = <&nsscc NSS_CC_PORT1_MAC_CLK>,
@@ -405,43 +380,29 @@
 			reset-names = "mac", "rx", "tx";
 		};
 
-		port@5 {
-			reg = <5>;
-			status = "disabled";
-			phy-mode = "sgmii";
+		port@5 { status = "disabled"; };
+
+		port@6 {
+			reg = <6>;
+			status = "okay";
+			phy-mode = "qsgmii";
 			managed = "in-band-status";
 			label = "lan4";
 			phy-handle = <&phy5>;
-			pcs-handle = <&pcs0_ch4>;
-			clocks = <&nsscc NSS_CC_PORT5_MAC_CLK>,
-				 <&nsscc NSS_CC_PORT5_RX_CLK>,
-				 <&nsscc NSS_CC_PORT5_TX_CLK>;
+			pcs-handle = <&pcs2_ch0>;
+			clocks = <&nsscc NSS_CC_PORT6_MAC_CLK>,
+				 <&nsscc NSS_CC_PORT6_RX_CLK>,
+				 <&nsscc NSS_CC_PORT6_TX_CLK>;
 			clock-names = "mac", "rx", "tx";
-			resets = <&nsscc PORT5_MAC_ARES>,
-				 <&nsscc PORT5_RX_ARES>,
-				 <&nsscc PORT5_TX_ARES>;
+			resets = <&nsscc PORT6_MAC_ARES>,
+				 <&nsscc PORT6_RX_ARES>,
+				 <&nsscc PORT6_TX_ARES>;
 			reset-names = "mac", "rx", "tx";
-		};
-
-		port@6 {
-			status = "disabled";
 		};
 	};
 };
 
 /* Disable unused UNIPHY/PCS */
-&pcs0 {
-	status = "okay";
-	qcom,uniphy-mode = "sgmii";
-
-	pcs0_ch4: pcs-mii@4 {
-		reg = <4>;
-		clocks = <&nsscc NSS_CC_UNIPHY_PORT5_RX_CLK>,
-			 <&nsscc NSS_CC_UNIPHY_PORT5_TX_CLK>;
-		clock-names = "rx", "tx";
-	};
-};
-
 &pcs1 { status = "disabled"; };
 &pcs2 {
 	status = "okay";
@@ -451,7 +412,7 @@
 /* ---- Serial NAND Flash ---- */
 &qpic_bam { status = "okay"; };
 
-&qpic_nand {
+&qpic_nand{
 	pinctrl-0 = <&qpic_snand_default_state>;
 	pinctrl-names = "default";
 	status = "okay";
@@ -573,6 +534,10 @@
 				label = "0:art";
 				reg = <0x01480000 0x00100000>;
 				read-only;
+
+				macaddr_wan: mac-address@0 {
+					reg = <0x0 0x6>;
+				};
 			};
 
 			partition@01580000 {
@@ -621,30 +586,12 @@
 		reg = <0xc0000000 0x1000000>;
 		qcom,board_id = <0x30>;
 		qcom,tgt-mem-mode = <0x02>;
-		qcom,rproc = <&wcss>; 
 		status = "okay";
 		/* The driver expects a remote processor handle; this is usually
 		   provided by the "qcom,rproc" property in the stock DTS. If your
 		   kernel requires it, you may need to add the appropriate phandle
 		   to the WCSS remoteproc. For now, try without. */
 	};
-
-    wcss: remoteproc@cd00000 {
-        compatible = "qcom,ipq9574-wcss-pil";
-        reg = <0x0cd00000 0x10000>,
-              <0x0cd10000 0x10000>,
-              <0x0cd20000 0x10000>;
-        reg-names = "wcss", "q6", "m3";
-        interrupts = <GIC_SPI 319 IRQ_TYPE_EDGE_RISING>,
-                     <GIC_SPI 320 IRQ_TYPE_EDGE_RISING>,
-                     <GIC_SPI 321 IRQ_TYPE_EDGE_RISING>;
-        interrupt-names = "wdog", "fatal", "ready";
-        memory-region = <&wlan_fw_mem>;
-        firmware-name = "IPQ9574/WIFI_FW/q6_fw.mdt";
-        qcom,smem-states = <&wcss_smp2p_out 0>;
-        qcom,smem-state-names = "stop";
-        status = "okay";
-    };
 };
 
 /* ---- USB – full stock configuration ---- */
@@ -671,7 +618,6 @@
 	status = "okay";
 };
 
-
 &usb_0_qmpphy {
 	vdda-phy-supply = <&vdd_usb_phy>;
     vdda-pll-supply = <&vdd_usb_phy>;
@@ -679,7 +625,10 @@
 };
 
 /* ---- Serial & misc (unchanged) ---- */
-&blsp1_spi0 { status = "disabled"; };
+&blsp1_spi0 {
+	status = "disabled";
+};
+
 &blsp1_uart2 {
 	pinctrl-0 = <&uart2_pins>;
 	pinctrl-names = "default";
@@ -711,13 +660,29 @@
 	};
 };
 
-&sleep_clk { clock-frequency = <32000>; };
+&sleep_clk { 
+	clock-frequency = <32000>;
+};
 
 /* ---- Clock configuration (unchanged) ---- */
-&ref_48mhz_clk { clock-div = <1>; clock-mult = <1>; };
-&xo_board_clk { clock-div = <2>; clock-mult = <1>; };
-&xo_clk { clock-frequency = <48000000>; };
+&ref_48mhz_clk {
+	clock-div = <1>;
+	clock-mult = <1>;
+};
+
+&xo_board_clk {
+	clock-div = <2>;
+	clock-mult = <1>;
+};
+
+&xo_clk {
+	clock-frequency = <48000000>;
+};
 
 &qfprom {
-    status = "okay";
+	status = "okay";
+};
+
+&rpm {
+    status = "disabled";
 };

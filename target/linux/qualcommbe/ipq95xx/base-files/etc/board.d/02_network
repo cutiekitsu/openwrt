@@ -25,49 +25,8 @@ ipq95xx_setup_interfaces()
         # and eth1/wan uses the dedicated architecture switch bridge port configuration.
         ucidef_set_interfaces_lan_wan "lan1 lan2 lan3 lan4" "wan"
         ;;
-    jiorouter,jidu6611|\
     jiorouter,ax6000-jidu6j11)
-        local mfg_dev
-        local model
-        
-        mfg_dev=$(find_mtd_chardev "mfg")
-        [ -z "$mfg_dev" ] && return
-        
-        # Parse device sub-variant
-        model=$(dd if="$mfg_dev" bs=1024 count=1 2>/dev/null | strings | grep -E -o -m1 '(JIDU)?[0-9]{4}')
-        
-        case "$model" in
-        *6111)
-            label_mac=$(mtd_get_mac_text "mfg" 0x1d0)
-            ;;
-
-        *6411)
-            label_mac=$(mtd_get_mac_ascii "mfg" "mac")
-            ;;
-
-        *6611)
-            label_mac=$(get_mac_binary "$(find_mtd_chardev '0:art')" 0)
-            # Extract SoC Radio (IPQ9574)
-            # TODO: Testing. Doesn't work as of 12 June 2026
-            # caldata_extract "0:ART" 0x1000 0x20000 "ath11k/IPQ9574/hw1.0/caldata.bin"
-    
-            # Extract PCI Radios based on actual system paths
-            # caldata_extract "0:ART" 0x26800 0x20000 "ath11k/QCN9074/hw1.0/cal-pci-0000:01:00.0.bin"
-            # caldata_extract "0:ART" 0x4c000 0x20000 "ath11k/QCN9074/hw1.0/cal-pci-0001:01:00.0.bin"
-            ;;
-        *6711)
-            label_mac=$(mtd_get_mac_ascii "mfg" "mac")
-            ;;
-        *6811)
-            label_mac=$(mtd_get_mac_ascii "mfg" "mac")
-            ;;
-        *6911)
-            label_mac=$(mtd_get_mac_ascii "mfg" "mac")
-            ;;
-        *)
-            label_mac=$(get_mac_binary "/dev/mtd20" 0)
-            ;;
-        esac
+        label_mac=$(get_mac_binary "$(find_mtd_chardev '0:art')" 0)
         
         if [ -n "$label_mac" ]; then
             wan_mac="$label_mac"

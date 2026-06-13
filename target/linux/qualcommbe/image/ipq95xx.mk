@@ -35,37 +35,20 @@ define Device/jiorouter-ax6000-jidu6j11
     DEVICE_MODEL := AX6000
     DEVICE_VARIANT := JIDU6J11
 
-	DEVICE_ALT1_VENDOR := JioRouter
-	DEVICE_ALT1_MODEL := AX6000
-	DEVICE_ALT1_VARIANT := JIDU6411
-
-    DEVICE_ALT2_VENDOR := JioRouter
-	DEVICE_ALT2_MODEL := AX6000
-	DEVICE_ALT2_VARIANT := JIDU6411
-
-	DEVICE_ALT3_VENDOR := JioRouter
-	DEVICE_ALT3_MODEL := AX6000
-	DEVICE_ALT3_VARIANT := JIDU6611
-
-	DEVICE_ALT4_VENDOR := JioRouter
-	DEVICE_ALT4_MODEL := AX6000
-	DEVICE_ALT4_VARIANT := JIDU6711
-
-	DEVICE_ALT5_VENDOR := JioRouter
-	DEVICE_ALT5_MODEL := AX6000
-	DEVICE_ALT5_VARIANT := JIDU6811
-
-	DEVICE_ALT6_VENDOR := JioRouter
-	DEVICE_ALT6_MODEL := AX6000
-	DEVICE_ALT6_VARIANT := JIDU6911
-    
   	DEVICE_DTS_DIR := ../dts
     DEVICE_DTS := ipq9574-jiorouter-ax6000-jidu6j11
     SOC := ipq9574
     
     BLOCKSIZE := 128k
     PAGESIZE := 2048
-    DEVICE_PACKAGES := kmod-ath11k kmod-ath11k-pci ath11k-firmware-qcn9074
+    DEVICE_PACKAGES := \
+		kmod-ath11k kmod-ath11k-pci ath11k-firmware-qcn9074 \
+		kmod-ath11k-ahb ath11k-firmware-ipq9574 \
+		kmod-usb3 kmod-usb-storage \
+		block-mount kmod-fs-ext4 kmod-fs-vfat kmod-nls-cp437 kmod-nls-iso8859-1 \
+		uboot-envtools mwan3 luci-app-mwan3 \
+		luci-app-sqm-scripts iperf3 kmod-ledtrig-netdev
+
     IMAGES += squashfs-initramfs-uImage.itb
     IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
 endef
