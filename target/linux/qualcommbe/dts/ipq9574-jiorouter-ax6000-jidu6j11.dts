@@ -142,7 +142,7 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 		reg = <0x10>;
-		qcom,package-mode = "qsgmii";
+		qcom,package-mode = "psgmii";
 
 		phy0: ethernet-phy@10 { reg = <0x10>; };
 		phy1: ethernet-phy@11 { reg = <0x11>; };
@@ -311,7 +311,7 @@
 
 		port@1 {
 			reg = <1>;
-			phy-mode = "qsgmii";
+			phy-mode = "psgmii";
 			managed = "in-band-status";
 			label = "wan";
 			nvmem-cells = <&macaddr_wan>;
@@ -331,7 +331,7 @@
 
 		port@2 {
 			reg = <2>;
-			phy-mode = "qsgmii";
+			phy-mode = "psgmii";
 			managed = "in-band-status";
 			label = "lan1";
 			phy-handle = <&phy1>;
@@ -348,7 +348,7 @@
 
 		port@3 {
 			reg = <3>;
-			phy-mode = "qsgmii";
+			phy-mode = "psgmii";
 			managed = "in-band-status";
 			label = "lan2";
 			phy-handle = <&phy2>;
@@ -365,7 +365,7 @@
 
 		port@4 {
 			reg = <4>;
-			phy-mode = "qsgmii";
+			phy-mode = "psgmii";
 			managed = "in-band-status";
 			label = "lan3";
 			phy-handle = <&phy3>;
@@ -385,11 +385,11 @@
 		port@6 {
 			reg = <6>;
 			status = "okay";
-			phy-mode = "qsgmii";
+			phy-mode = "psgmii";
 			managed = "in-band-status";
 			label = "lan4";
 			phy-handle = <&phy5>;
-			pcs-handle = <&pcs2_ch0>;
+			pcs-handle = <&pcs0_ch4>;
 			clocks = <&nsscc NSS_CC_PORT6_MAC_CLK>,
 				 <&nsscc NSS_CC_PORT6_RX_CLK>,
 				 <&nsscc NSS_CC_PORT6_TX_CLK>;
@@ -403,12 +403,15 @@
 };
 
 /* Disable unused UNIPHY/PCS */
+/* Disable unused UNIPHY/PCS */
 &pcs1 { status = "disabled"; };
-&pcs2 {
-	status = "okay";
-	qcom,uniphy-mode = "qsgmii";
-};
+&pcs2 { status = "disabled"; };
 
+/* Enable and configure PCS0 for all 5 ports */
+&pcs0 {
+	status = "okay";
+	qcom,uniphy-mode = "psgmii";
+};
 /* ---- Serial NAND Flash ---- */
 &qpic_bam { status = "okay"; };
 
