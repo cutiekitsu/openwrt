@@ -8,19 +8,41 @@
 
 ipq95xx_setup_interfaces()
 {
-	local board="$1"
+    local board="$1"
+    local lan_mac=""
+    local wan_mac=""
+    local label_mac=""
 
-	case "$board" in
-	8devices,kiwi-dvk)
-		ucidef_set_interfaces_lan_wan "lan1 lan2" "wan"
-		;;
-	qcom,ipq9574-ap-al02-c7)
-		ucidef_set_interfaces_lan_wan "lan1 lan2 lan3 lan4 lan5" "wan"
-		;;
-	*)
-		echo "Unsupported hardware. Network interfaces not initialized"
-		;;
-	esac
+    case "$board" in
+    8devices,kiwi-dvk)
+        ucidef_set_interfaces_lan_wan "lan1 lan2" "wan"
+        ;;
+    qcom,ipq9574-ap-al02-c7)
+        ucidef_set_interfaces_lan_wan "lan1 lan2 lan3 lan4 lan5" "wan"
+        ;;
+    qcom,ipq9574-ap-al02-c1)
+        # Re-routed to match the C1 layout architecture: lan1-4 are grouped, 
+        # and eth1/wan uses the dedicated architecture switch bridge port configuration.
+        ucidef_set_interfaces_lan_wan "lan1 lan2 lan3 lan4" "wan"
+        ;;
+    jiorouter,ax6000-jidu6j11)
+        label_mac=$(get_mac_binary "$(find_mtd_chardev '0:art')" 0)
+        
+        if [ -n "$label_mac" ]; then
+            wan_mac="$label_mac"
+            lan_mac=$(macaddr_add "$label_mac" 1)
+            
+            ucidef_set_interface_macaddr "lan" "$lan_mac"
+            ucidef_set_interface_macaddr "wan" "$wan_mac"
+            ucidef_set_label_macaddr "$label_mac"
+        fi
+        
+        ucidef_set_interfaces_lan_wan "lan1 lan2 lan3 lan4" "wan"
+        ;;
+    *)
+        echo "Unsupported hardware. Network interfaces not initialized"
+        ;;
+    esac
 }
 
 board_config_update

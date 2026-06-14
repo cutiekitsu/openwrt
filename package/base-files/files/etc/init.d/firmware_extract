@@ -1,0 +1,58 @@
+# #!/bin/sh /etc/rc.common
+
+# START=01
+# USE_PROCD=0
+
+# echo "Hello from firmware_extract"
+
+# extract_range() {
+#     local mtd=$1
+#     local offset=$2
+#     local size=$3
+#     local outfile=$4
+#     if [ ! -f "$outfile" ]; then
+#         dd if="$mtd" of="$outfile" bs=1 skip="$offset" count="$size" 2>/dev/null && \
+#             logger -t firmware_extract "Extracted $outfile"
+#     fi
+# }
+
+# boot() {
+#     echo "Hello from firmware_extract > boot()"
+#     # ---- ART partition (mtd20) ----
+#     if [ -c /dev/mtd20 ]; then
+#         # MAC address for LAN/WAN (optional)
+#         [ ! -f /tmp/art_mac.bin ] && dd if=/dev/mtd20 of=/tmp/art_mac.bin bs=1 count=6 2>/dev/null
+
+#         # Integrated IPQ9574 WiFi calibration (offset 0x1000, size 128KB)
+#         local integ_dir="/lib/firmware/ath11k/IPQ9574/hw1.0"
+#         mkdir -p "$integ_dir"
+#         extract_range /dev/mtd20 0x1000 0x20000 "$integ_dir/cal.bin"
+#         # Some drivers expect board-2.bin – create a symlink if needed
+#         [ ! -f "$integ_dir/board-2.bin" ] && [ -f "$integ_dir/cal.bin" ] && \
+#             ln -sf cal.bin "$integ_dir/board-2.bin"
+#     fi
+
+#     # ---- BDF partition (mtd27) ----
+#     if [ -c /dev/mtd27 ]; then
+#         local qcn_dir="/lib/firmware/ath11k/QCN9074/hw1.0"
+#         mkdir -p "$qcn_dir"
+
+#         # Extract the raw board file (used as board-2.bin)
+#         if [ ! -f "$qcn_dir/board-2.bin" ]; then
+#             dd if=/dev/mtd27 of="$qcn_dir/board-2.bin" 2>/dev/null
+#             logger -t firmware_extract "Extracted QCN9074 board-2.bin"
+#         fi
+
+#         # Extract the board file matching the PCIe ID 0xb7
+#         if [ ! -f "$qcn_dir/board-0xb7.bin" ]; then
+#             dd if=/dev/mtd27 of="$qcn_dir/board-0xb7.bin" 2>/dev/null
+#             logger -t firmware_extract "Extracted QCN9074 board-0xb7.bin"
+#         fi
+
+#         # Create symlink for the driver’s expected file name
+#         if [ ! -L "$qcn_dir/cal-pci-0001:01:00.0.bin" ] && [ -f "$qcn_dir/board-0xb7.bin" ]; then
+#             ln -sf board-0xb7.bin "$qcn_dir/cal-pci-0001:01:00.0.bin"
+#             logger -t firmware_extract "Created symlink for QCN9074 calibration"
+#         fi
+#     fi
+# }

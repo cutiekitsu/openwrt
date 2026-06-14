@@ -1,0 +1,32 @@
+#!/bin/sh
+# /etc/hotplug.d/firmware/10-ath11k-caldata
+
+. /lib/functions.sh
+case "$ACTION" in
+    add|add_deferred)
+        case "$FIRMWARE" in
+            *"ath11k/IPQ9574/hw1.0/caldata.bin")
+                art_mtd=$(find_mtd_part "0:art")
+                [ -z "$art_mtd" ] && art_mtd=$(find_mtd_part "art")
+                [ -z "$art_mtd" ] && art_mtd="/dev/mtdblock20"
+
+                if [ -e "$art_mtd" ]; then
+                    mkdir -p "/lib/firmware/ath11k/IPQ9574/hw1.0"
+                    dd if="$art_mtd" of="/lib/firmware/$FIRMWARE" bs=1 skip=4096 count=131072 2> /dev/null
+                fi
+                ;;
+
+            *"ath11k/QCN9074/hw1.0/cal-pci-0001:01:00.0.bin")
+                TARGET_DIR="/lib/firmware/ath11k/QCN9074/hw1.0"
+                art_mtd=$(find_mtd_part "0:art")
+                [ -z "$art_mtd" ] && art_mtd=$(find_mtd_part "art")
+                [ -z "$art_mtd" ] && art_mtd="/dev/mtdblock20"
+
+                if [ -e "$art_mtd" ]; then
+                    mkdir -p "$TARGET_DIR"
+                    dd if="$art_mtd" of="/lib/firmware/$FIRMWARE" bs=1 skip=311296 count=131072 2> dev/null
+                fi
+                ;;
+            esac
+        ;;
+    esac

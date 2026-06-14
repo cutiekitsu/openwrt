@@ -1,0 +1,688 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
+/*
+ * Jio AirFiber (JIDU6J11) - IPQ9574 AP-AL02-C1
+ *
+  */
+
+/dts-v1/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/leds/common.h>
+#include "ipq9574.dtsi"
+
+#include <dt-bindings/clock/qcom,qca8k-nsscc.h>
+#include <dt-bindings/net/qcom,qca808x.h>
+#include <dt-bindings/reset/qcom,qca8k-nsscc.h>
+
+/ {
+	model = "JioRouter AX6000 JIDU6J11 / Qualcomm IPQ9574";
+	compatible = "jiorouter,ax6000-jidu6j11", "qcom,ipq9574";
+
+	aliases {
+		serial0 = &blsp1_uart2;
+		pci0 = &pcie0;
+		pci1 = &pcie1;
+		pci2 = &pcie2;
+		pci3 = &pcie3;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	ipq9574_s4: s4 {
+		regulator-min-microvolt = <1>;
+		regulator-max-microvolt = <9>;
+		regulator-always-on;
+	};
+
+	regulator_fixed_3p3: s3300 {
+		compatible = "regulator-fixed";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-boot-on;
+		regulator-always-on;
+		regulator-name = "fixed_3p3";
+	};
+
+	regulator_fixed_0p925: s0925 {
+		compatible = "regulator-fixed";
+		regulator-min-microvolt = <925000>;
+		regulator-max-microvolt = <925000>;
+		regulator-boot-on;
+		regulator-always-on;
+		regulator-name = "fixed_0p925";
+	};
+
+	/*TODO: Remove*/
+	vdd_usb_phy: vdd-usb-phy {
+		compatible = "regulator-fixed";
+		regulator-name = "vdd_usb_phy";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		vin-supply = <&regulator_fixed_3p3>;
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+		pinctrl-0 = <&gpio_keys_default>;
+		pinctrl-names = "default";
+
+		reset {
+			label = "reset";
+			linux,code = <KEY_RESTART>;
+			gpios = <&tlmm 10 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		pinctrl-0 = <&gpio_leds_default>;
+		pinctrl-names = "default";
+
+		led_red: led-0 {
+			color = <LED_COLOR_ID_RED>;
+			function = LED_FUNCTION_STATUS;
+			gpios = <&tlmm 6 GPIO_ACTIVE_HIGH>;
+			default-state = "on";
+			linux,default-trigger = "none";
+		};
+
+		led_green: led-1 {
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_STATUS;
+			gpios = <&tlmm 16 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "none";
+		};
+
+		led_blue: led-2 {
+			color = <LED_COLOR_ID_BLUE>;
+			function = LED_FUNCTION_STATUS;
+			gpios = <&tlmm 17 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "none";
+		};
+	};
+};
+
+&pcie0 { status = "disabled"; };
+&pcie0_phy { status = "disabled"; };
+&pcie1_phy { status = "okay"; };
+&pcie1 {
+	pinctrl-0 = <&pcie_qcn9000_pins>;
+	pinctrl-names = "default";
+	perst-gpios = <&tlmm 26 GPIO_ACTIVE_LOW>;
+	status = "okay";
+
+	pcie1_rp {
+		reg = <0 0 0 0 0>;
+		wifi@0 {
+			compatible = "pci17cb,1104";
+			reg = <0 0 0 0 0>;
+			qcom,board_id = <0xb7>;
+		};
+	};
+};
+
+&pcie2_phy { status = "disabled"; };
+&pcie2 { status = "disabled"; };
+&pcie3_phy { status = "disabled"; };
+&pcie3 { status = "disabled"; };
+
+/* ---- MDIO and Ethernet PHYs ---- */
+&mdio {
+	clock-frequency = <6250000>;
+	pinctrl-0 = <&mdio_pins>;
+	reset-gpios = <&tlmm 60 GPIO_ACTIVE_LOW>;
+	pinctrl-names = "default";
+	status = "okay";
+
+	ethernet-phy-package@0 {
+		compatible = "qcom,qca8075-package";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0x10>;
+		qcom,package-mode = "qsgmii";
+
+		phy0: ethernet-phy@10 { reg = <0x10>; };
+		phy1: ethernet-phy@11 { reg = <0x11>; };
+		phy2: ethernet-phy@12 { reg = <0x12>; };
+		phy3: ethernet-phy@13 { reg = <0x13>; };
+		phy5: ethernet-phy@14 { reg = <0x14>; };
+	};
+};
+
+/* ---- Pinmux (add USB supply pin) ---- */
+&tlmm {
+	spi_0_pins: spi-0-state {
+		pins = "gpio11", "gpio12", "gpio13", "gpio14";
+		function = "blsp0_spi";
+		drive-strength = <8>;
+		bias-disable;
+	};
+
+	gpio_keys_default: gpio-keys-default-state {
+		pins = "gpio10";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
+	};
+
+	gpio_leds_default: gpio-leds-default-state {
+		pins = "gpio6", "gpio16", "gpio17";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
+	};
+
+	qpic_snand_default_state: qpic-snand-default-state {
+		clock-pins {
+			pins = "gpio5";
+			function = "qspi_clk";
+			drive-strength = <8>;
+			bias-disable;
+		};
+		cs-pins {
+			pins = "gpio4";
+			function = "qspi_cs";
+			drive-strength = <8>;
+			bias-disable;
+		};
+		data-pins {
+			pins = "gpio0", "gpio1", "gpio2", "gpio3";
+			function = "qspi_data";
+			drive-strength = <8>;
+			bias-disable;
+		};
+	};
+
+	pcie1_default: pcie1-default-state {
+		clkreq-n-pins {
+			pins = "gpio25";
+			function = "pcie1_clk";
+			drive-strength = <6>;
+			bias-pull-up;
+		};
+		perst-n-pins {
+			pins = "gpio26";
+			function = "gpio";
+			drive-strength = <8>;
+			bias-pull-down;
+			output-low;
+		};
+		wake-n-pins {
+			pins = "gpio27";
+			function = "pcie1_wake";
+			drive-strength = <6>;
+			bias-pull-up;
+		};
+	};
+
+	pcie_qcn9000_pins: pcie-qcn9000-state {
+		clkreq-n-pins {
+			pins = "gpio25";
+			function = "pcie1_clk";
+			drive-strength = <6>;
+			bias-pull-up;
+		};
+		perst-n-pins {
+			pins = "gpio26";
+			function = "gpio";
+			drive-strength = <8>;
+			bias-pull-up;
+			output-low;      /* Hold card in reset until driver releases */
+		};
+	};
+
+
+	pcie2_default: pcie2-default-state {
+		clkreq-n-pins {
+			pins = "gpio28";
+			function = "pcie2_clk";
+			drive-strength = <6>;
+			bias-pull-up;
+		};
+		perst-n-pins {
+			pins = "gpio29";
+			function = "gpio";
+			drive-strength = <8>;
+			bias-pull-down;
+			output-low;
+		};
+		wake-n-pins {
+			pins = "gpio30";
+			function = "pcie2_wake";
+			drive-strength = <6>;
+			bias-pull-up;
+		};
+	};
+
+	pcie3_default: pcie3-default-state {
+		clkreq-n-pins {
+			pins = "gpio31";
+			function = "pcie3_clk";
+			drive-strength = <6>;
+			bias-pull-up;
+		};
+		perst-n-pins {
+			pins = "gpio32";
+			function = "gpio";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+		wake-n-pins {
+			pins = "gpio33";
+			function = "pcie3_wake";
+			drive-strength = <6>;
+			bias-pull-up;
+		};
+	};
+
+	/* USB supply pin – enables VBUS or PHY power */
+	usb_supply_pin: usb-supply-pin {
+		pins = "gpio64";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
+		output-high;
+	};
+
+	mdio_pins: mdio-pins {
+		mux_0 {
+			pins = "gpio38";
+			function = "mdc";
+			drive-strength = <8>;
+			bias-disable;
+		};
+		mux_1 {
+			pins = "gpio39";
+			function = "mdio";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+	};
+};
+
+/* ---- Ethernet MAC (PPE) configuration ---- */
+&qcom_ppe {
+	ethernet-ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@1 {
+			reg = <1>;
+			phy-mode = "qsgmii";
+			managed = "in-band-status";
+			label = "wan";
+			nvmem-cells = <&macaddr_wan>;
+            nvmem-cell-names = "mac-address";
+
+			phy-handle = <&phy0>;
+			pcs-handle = <&pcs0_ch0>;
+			clocks = <&nsscc NSS_CC_PORT1_MAC_CLK>,
+				<&nsscc NSS_CC_PORT1_RX_CLK>,
+				 <&nsscc NSS_CC_PORT1_TX_CLK>;
+			clock-names = "mac", "rx", "tx";
+			resets = <&nsscc PORT1_MAC_ARES>,
+				 <&nsscc PORT1_RX_ARES>,
+				 <&nsscc PORT1_TX_ARES>;
+			reset-names = "mac", "rx", "tx";
+		};
+
+		port@2 {
+			reg = <2>;
+			phy-mode = "qsgmii";
+			managed = "in-band-status";
+			label = "lan1";
+			phy-handle = <&phy1>;
+			pcs-handle = <&pcs0_ch1>;
+			clocks = <&nsscc NSS_CC_PORT2_MAC_CLK>,
+				 <&nsscc NSS_CC_PORT2_RX_CLK>,
+				 <&nsscc NSS_CC_PORT2_TX_CLK>;
+			clock-names = "mac", "rx", "tx";
+			resets = <&nsscc PORT2_MAC_ARES>,
+				 <&nsscc PORT2_RX_ARES>,
+				 <&nsscc PORT2_TX_ARES>;
+			reset-names = "mac", "rx", "tx";
+		};
+
+		port@3 {
+			reg = <3>;
+			phy-mode = "qsgmii";
+			managed = "in-band-status";
+			label = "lan2";
+			phy-handle = <&phy2>;
+			pcs-handle = <&pcs0_ch2>;
+			clocks = <&nsscc NSS_CC_PORT3_MAC_CLK>,
+				 <&nsscc NSS_CC_PORT3_RX_CLK>,
+				 <&nsscc NSS_CC_PORT3_TX_CLK>;
+			clock-names = "mac", "rx", "tx";
+			resets = <&nsscc PORT3_MAC_ARES>,
+				 <&nsscc PORT3_RX_ARES>,
+				 <&nsscc PORT3_TX_ARES>;
+			reset-names = "mac", "rx", "tx";
+		};
+
+		port@4 {
+			reg = <4>;
+			phy-mode = "qsgmii";
+			managed = "in-band-status";
+			label = "lan3";
+			phy-handle = <&phy3>;
+			pcs-handle = <&pcs0_ch3>;
+			clocks = <&nsscc NSS_CC_PORT4_MAC_CLK>,
+				 <&nsscc NSS_CC_PORT4_RX_CLK>,
+				 <&nsscc NSS_CC_PORT4_TX_CLK>;
+			clock-names = "mac", "rx", "tx";
+			resets = <&nsscc PORT4_MAC_ARES>,
+				 <&nsscc PORT4_RX_ARES>,
+				 <&nsscc PORT4_TX_ARES>;
+			reset-names = "mac", "rx", "tx";
+		};
+
+		port@5 { status = "disabled"; };
+
+		port@6 {
+			reg = <6>;
+			status = "okay";
+			phy-mode = "qsgmii";
+			managed = "in-band-status";
+			label = "lan4";
+			phy-handle = <&phy5>;
+			pcs-handle = <&pcs2_ch0>;
+			clocks = <&nsscc NSS_CC_PORT6_MAC_CLK>,
+				 <&nsscc NSS_CC_PORT6_RX_CLK>,
+				 <&nsscc NSS_CC_PORT6_TX_CLK>;
+			clock-names = "mac", "rx", "tx";
+			resets = <&nsscc PORT6_MAC_ARES>,
+				 <&nsscc PORT6_RX_ARES>,
+				 <&nsscc PORT6_TX_ARES>;
+			reset-names = "mac", "rx", "tx";
+		};
+	};
+};
+
+/* Disable unused UNIPHY/PCS */
+&pcs1 { status = "disabled"; };
+&pcs2 {
+	status = "okay";
+	qcom,uniphy-mode = "qsgmii";
+};
+
+/* ---- Serial NAND Flash ---- */
+&qpic_bam { status = "okay"; };
+
+&qpic_nand{
+	pinctrl-0 = <&qpic_snand_default_state>;
+	pinctrl-names = "default";
+	status = "okay";
+
+	flash@0 {
+		compatible = "spi-nand";
+		reg = <0>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		nand-ecc-engine = <&qpic_nand>;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@00000000 {
+				label = "0:sbl1";
+				reg = <0x00000000 0x00180000>;
+				read-only;
+			};
+			partition@00180000 {
+				label = "0:sbl1_1";
+				reg = <0x00180000 0x00180000>;
+				read-only;
+			};
+			partition@00300000 {
+				label = "0:mibib";
+				reg = <0x00300000 0x00100000>;
+				read-only;
+			};
+			partition@00400000 {
+				label = "0:bootconfig";
+				reg = <0x00400000 0x00080000>;
+				read-only;
+			};
+			partition@00480000 {
+				label = "0:bootconfig1";
+				reg = <0x00480000 0x00080000>;
+				read-only;
+			};
+			partition@00500000 {
+				label = "0:qsee";
+				reg = <0x00500000 0x00380000>;
+				read-only;
+			};
+			partition@00880000 {
+				label = "0:qsee_1";
+				reg = <0x00880000 0x00380000>;
+				read-only;
+			};
+			partition@00c00000 {
+				label = "0:devcfg_1";
+				reg = <0x00c00000 0x00080000>;
+				read-only;
+			};
+			partition@00c80000 {
+				label = "0:devcfg";
+				reg = <0x00c80000 0x00080000>;
+				read-only;
+			};
+			partition@00d00000 {
+				label = "0:apdp_1";
+				reg = <0x00d00000 0x00080000>;
+				read-only;
+			};
+			partition@00d80000 {
+				label = "0:apdp";
+				reg = <0x00d80000 0x00080000>;
+				read-only;
+			};
+			partition@00e00000 {
+				label = "0:tme";
+				reg = <0x00e00000 0x00080000>;
+				read-only;
+			};
+			partition@00e80000 {
+				label = "0:tme_1";
+				reg = <0x00e80000 0x00080000>;
+				read-only;
+			};
+			partition@00f00000 {
+				label = "0:rpm_1";
+				reg = <0x00f00000 0x00080000>;
+				read-only;
+			};
+			partition@00f80000 {
+				label = "0:rpm";
+				reg = <0x00f80000 0x00080000>;
+				read-only;
+			};
+			partition@01000000 {
+				label = "0:cdt_1";
+				reg = <0x01000000 0x00080000>;
+				read-only;
+			};
+			partition@01080000 {
+				label = "0:cdt";
+				reg = <0x01080000 0x00080000>;
+				read-only;
+			};
+			partition@01100000 {
+				label = "0:appsblenv";
+				reg = <0x01100000 0x00080000>;
+			};
+			partition@01180000 {
+				label = "0:appsbl_1";
+				reg = <0x01180000 0x00180000>;
+				read-only;
+			};
+			partition@01300000 {
+				label = "0:appsbl";
+				reg = <0x01300000 0x00180000>;
+				read-only;
+			};
+
+			art: partition@01480000 {
+				compatible = "nvmem-cells";
+				label = "0:art";
+				reg = <0x01480000 0x00100000>;
+				read-only;
+
+				macaddr_wan: mac-address@0 {
+					reg = <0x0 0x6>;
+				};
+			};
+
+			partition@01580000 {
+				label = "0:ethphyfw";
+				reg = <0x01580000 0x00100000>;
+				read-only;
+			};
+			partition@01680000 {
+				label = "0:training";
+				reg = <0x01680000 0x00080000>;
+				read-only;
+			};
+			partition@01700000 {
+				label = "firmware";
+				reg = <0x01700000 0x0a000000>;
+				compatible = "denx,fit";
+			};
+			partition@0b700000 {
+				label = "customfs";
+				reg = <0x0b700000 0x04100000>;
+				read-only;
+			};
+			partition@0f800000 {
+				label = "jio-reserved";
+				reg = <0x0f800000 0x00200000>;
+				read-only;
+			};
+			partition@0fa00000 {
+				label = "mfg";
+				reg = <0x0fa00000 0x00200000>;
+				read-only;
+			};
+			partition@0fc00000 {
+				label = "0:bdf";
+				reg = <0x0fc00000 0x00200000>;
+				read-only;
+			};
+		};
+	};
+};
+
+/* ---- Integrated 2.4 GHz WiFi (disabled – needs remoteproc) ---- */
+&soc {
+	wifi@c0000000 {
+		compatible = "qcom,cnss-qca9574", "qcom,ipq9574-wifi";
+		reg = <0xc0000000 0x1000000>;
+		qcom,board_id = <0x30>;
+		qcom,tgt-mem-mode = <0x02>;
+		status = "okay";
+		/* The driver expects a remote processor handle; this is usually
+		   provided by the "qcom,rproc" property in the stock DTS. If your
+		   kernel requires it, you may need to add the appropriate phandle
+		   to the WCSS remoteproc. For now, try without. */
+	};
+};
+
+/* ---- USB – full stock configuration ---- */
+&usb3 {
+	status = "okay";
+	pinctrl-0 = <&usb_supply_pin>;
+	pinctrl-names = "default";
+};
+
+&usb_0_dwc3 {
+	dr_mode = "host";
+	status = "okay";
+	snps,quirk-ref-clock-adjustment = <0xa87f0>;
+	snps,quirk-ref-clock-period = <0x29>;
+	snps,dis_ep_cache_eviction;
+	snps,dis_u2_susphy_quirk;
+	snps,dis_u3_susphy_quirk;
+};
+
+&usb_0_qusbphy {
+	vdd-supply = <&vdd_usb_phy>;
+    vdda-pll-supply = <&vdd_usb_phy>;
+    vdda-phy-dpdm-supply = <&vdd_usb_phy>;
+	status = "okay";
+};
+
+&usb_0_qmpphy {
+	vdda-phy-supply = <&vdd_usb_phy>;
+    vdda-pll-supply = <&vdd_usb_phy>;
+	status = "okay";
+};
+
+/* ---- Serial & misc (unchanged) ---- */
+&blsp1_spi0 {
+	status = "disabled";
+};
+
+&blsp1_uart2 {
+	pinctrl-0 = <&uart2_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&rpm_requests {
+	regulators {
+		compatible = "qcom,rpm-mp5496-regulators";
+
+		ipq9574_s1: s1 {
+			regulator-min-microvolt = <725000>;
+			regulator-max-microvolt = <1075000>;
+		};
+
+		mp5496_l2: l2 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			regulator-always-on;
+			regulator-boot-on;
+		};
+
+		mp5496_l5: l5 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			regulator-always-on;
+			regulator-boot-on;
+		};
+	};
+};
+
+&sleep_clk { 
+	clock-frequency = <32000>;
+};
+
+/* ---- Clock configuration (unchanged) ---- */
+&ref_48mhz_clk {
+	clock-div = <1>;
+	clock-mult = <1>;
+};
+
+&xo_board_clk {
+	clock-div = <2>;
+	clock-mult = <1>;
+};
+
+&xo_clk {
+	clock-frequency = <48000000>;
+};
+
+&qfprom {
+	status = "okay";
+};
+
+&rpm {
+    status = "disabled";
+};
