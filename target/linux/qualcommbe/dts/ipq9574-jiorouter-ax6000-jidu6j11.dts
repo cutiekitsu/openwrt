@@ -142,13 +142,13 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 		reg = <0x10>;
-		qcom,package-mode = "qsgmii";
+		qcom,package-mode = "psgmii";
 
 		phy0: ethernet-phy@10 { reg = <0x10>; };
 		phy1: ethernet-phy@11 { reg = <0x11>; };
 		phy2: ethernet-phy@12 { reg = <0x12>; };
 		phy3: ethernet-phy@13 { reg = <0x13>; };
-		phy5: ethernet-phy@14 { reg = <0x14>; };
+		phy4: ethernet-phy@14 { reg = <0x14>; };
 	};
 };
 
@@ -311,12 +311,11 @@
 
 		port@1 {
 			reg = <1>;
-			phy-mode = "qsgmii";
+			phy-mode = "psgmii";
 			managed = "in-band-status";
 			label = "wan";
 			nvmem-cells = <&macaddr_wan>;
-            nvmem-cell-names = "mac-address";
-
+			nvmem-cell-names = "mac-address";
 			phy-handle = <&phy0>;
 			pcs-handle = <&pcs0_ch0>;
 			clocks = <&nsscc NSS_CC_PORT1_MAC_CLK>,
@@ -331,7 +330,7 @@
 
 		port@2 {
 			reg = <2>;
-			phy-mode = "qsgmii";
+			phy-mode = "psgmii";
 			managed = "in-band-status";
 			label = "lan1";
 			phy-handle = <&phy1>;
@@ -348,7 +347,7 @@
 
 		port@3 {
 			reg = <3>;
-			phy-mode = "qsgmii";
+			phy-mode = "psgmii";
 			managed = "in-band-status";
 			label = "lan2";
 			phy-handle = <&phy2>;
@@ -365,7 +364,7 @@
 
 		port@4 {
 			reg = <4>;
-			phy-mode = "qsgmii";
+			phy-mode = "psgmii";
 			managed = "in-band-status";
 			label = "lan3";
 			phy-handle = <&phy3>;
@@ -379,35 +378,46 @@
 				 <&nsscc PORT4_TX_ARES>;
 			reset-names = "mac", "rx", "tx";
 		};
-
-		port@5 { status = "disabled"; };
-
-		port@6 {
-			reg = <6>;
+		port@5 {
+			reg = <5>;
 			status = "okay";
-			phy-mode = "qsgmii";
+			phy-mode = "psgmii";
 			managed = "in-band-status";
 			label = "lan4";
-			phy-handle = <&phy5>;
-			pcs-handle = <&pcs2_ch0>;
-			clocks = <&nsscc NSS_CC_PORT6_MAC_CLK>,
-				 <&nsscc NSS_CC_PORT6_RX_CLK>,
-				 <&nsscc NSS_CC_PORT6_TX_CLK>;
+			phy-handle = <&phy4>;
+			pcs-handle = <&pcs0_ch4>;
+			clocks = <&nsscc NSS_CC_PORT5_MAC_CLK>,
+				 <&nsscc NSS_CC_PORT5_RX_CLK>,
+				 <&nsscc NSS_CC_PORT5_TX_CLK>;
 			clock-names = "mac", "rx", "tx";
-			resets = <&nsscc PORT6_MAC_ARES>,
-				 <&nsscc PORT6_RX_ARES>,
-				 <&nsscc PORT6_TX_ARES>;
+			resets = <&nsscc PORT5_MAC_ARES>,
+				 <&nsscc PORT5_RX_ARES>,
+				 <&nsscc PORT5_TX_ARES>;
 			reset-names = "mac", "rx", "tx";
 		};
+
 	};
 };
 
+
+/* Enable UNIPHY0 in PSGMII mode, add the 5th channel, and supply its clocks */
+/* Enable UNIPHY0 in PSGMII mode, add the 5th channel, and supply ALL clocks */
+&pcs0 {
+	status = "okay";
+	qcom,uniphy-mode = "psgmii";
+
+	pcs0_ch4: pcs-mii@4 {
+		reg = <4>;
+		clocks = <&nsscc NSS_CC_UNIPHY_PORT5_RX_CLK>,
+			 <&nsscc NSS_CC_UNIPHY_PORT5_TX_CLK>;
+		clock-names = "rx", "tx";
+	};
+};
+
+
 /* Disable unused UNIPHY/PCS */
 &pcs1 { status = "disabled"; };
-&pcs2 {
-	status = "okay";
-	qcom,uniphy-mode = "qsgmii";
-};
+&pcs2 { status = "disabled"; };
 
 /* ---- Serial NAND Flash ---- */
 &qpic_bam { status = "okay"; };
@@ -685,4 +695,9 @@
 
 &rpm {
     status = "disabled";
+};
+&nsscc {
+	assigned-clocks = <&nsscc NSS_CC_PORT5_RX_CLK_SRC>,
+			  <&nsscc NSS_CC_PORT5_TX_CLK_SRC>;
+	assigned-clock-parents = <&xo_board_clk>, <&xo_board_clk>;
 };
